@@ -1,0 +1,82 @@
+use std::time::Duration;
+
+use bevy::prelude::*;
+use bevy_rapier3d::prelude::*;
+use bevy_tnua::prelude::*;
+use bevy_tnua_rapier3d::TnuaRapier3dSensorShape;
+
+use super::NamedGroup;
+
+#[derive(Debug, Default, Clone, Component)]
+#[require(
+    Transform,
+    TankSpeed(TankController::tank_speed),
+    SceneRoot,
+    RigidBody(TankController::rigidbody),
+    Collider(TankController::collider),
+    CollisionGroups(TankController::collision_groups),
+    SolverGroups(TankController::solver_groups),
+    TnuaController,
+    TnuaRapier3dSensorShape(TankController::tnua_rapier3d_sensor_shape)
+)]
+pub struct TankController {
+    pub movement: Option<Dir2>,
+    pub fire: bool,
+    pub fire_timer: Option<Timer>,
+}
+
+impl TankController {
+    pub(crate) fn scene_root(asset_server: &AssetServer) -> SceneRoot {
+        SceneRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset("tank.glb")))
+    }
+
+    const fn tank_speed() -> TankSpeed {
+        TankSpeed {
+            linear: 10.0,
+            angular: 2.0 * std::f32::consts::PI,
+            fire_cooldown: Duration::from_millis(500),
+        }
+    }
+
+    const fn rigidbody() -> RigidBody {
+        RigidBody::Dynamic
+    }
+
+    fn collider() -> Collider {
+        Collider::compound(vec![
+            (
+                Vec3::new(0.0, 1.0, 0.0),
+                Quat::IDENTITY,
+                Collider::round_cylinder(0.25, 0.75, 0.25),
+            ),
+            (
+                Vec3::new(0.0, 1.25, 0.0),
+                Quat::IDENTITY,
+                Collider::ball(0.75),
+            ),
+        ])
+    }
+
+    fn collision_groups() -> CollisionGroups {
+        CollisionGroups::new(NamedGroup::TANK, Group::all())
+    }
+
+    fn solver_groups() -> SolverGroups {
+        SolverGroups::new(NamedGroup::TANK, Group::all() & !NamedGroup::BULLET)
+    }
+
+    fn tnua_rapier3d_sensor_shape() -> TnuaRapier3dSensorShape {
+        TnuaRapier3dSensorShape(Self::collider())
+    }
+
+    pub(crate) fn fire_animation_clip(asset_server: &AssetServer) -> Handle<AnimationClip> {
+        asset_server.load(GltfAssetLabel::Animation(0).from_asset("tank.glb"))
+    }
+}
+
+#[derive(Debug, Clone, Component)]
+pub struct TankSpeed {
+    pub linear: f32,
+    pub angular: f32,
+    pub fire_cooldown: Duration,
+}

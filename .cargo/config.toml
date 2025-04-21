@@ -1,0 +1,5 @@
+[alias]
+dev = "run --features bevy/dynamic_linking"
+
+[target.x86_64-pc-windows-msvc]
+linker = "rust-lld.exe"

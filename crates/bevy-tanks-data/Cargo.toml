@@ -1,0 +1,17 @@
+[package]
+name = "bevy-tanks-data"
+edition.workspace = true
+version.workspace = true
+readme.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+bevy.workspace = true
+bevy_rand.workspace = true
+bevy_rapier3d.workspace = true
+bevy-tnua.workspace = true
+bevy-tnua-rapier3d.workspace = true
+paste.workspace = true
+rand_distr.workspace = true
+log.workspace = true

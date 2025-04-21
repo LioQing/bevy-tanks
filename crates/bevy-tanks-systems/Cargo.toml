@@ -1,0 +1,17 @@
+[package]
+name = "bevy-tanks-systems"
+edition.workspace = true
+version.workspace = true
+readme.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+bevy-tanks-data.path = "../bevy-tanks-data"
+
+bevy.workspace = true
+bevy_rand.workspace = true
+bevy_rapier3d.workspace = true
+bevy-tnua.workspace = true
+rand.workspace = true
+log.workspace = true

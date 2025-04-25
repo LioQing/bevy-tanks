@@ -7,6 +7,34 @@ use bevy_tnua_rapier3d::TnuaRapier3dSensorShape;
 
 use super::NamedGroup;
 
+#[derive(Debug, Default, Clone, Copy, Component)]
+pub struct TankAlive;
+
+#[derive(Debug, Default, Clone, Copy)]
+pub enum TankLabel {
+    #[default]
+    Red,
+    Blue,
+}
+
+impl TankLabel {
+    pub fn opposite(self) -> Self {
+        match self {
+            TankLabel::Red => TankLabel::Blue,
+            TankLabel::Blue => TankLabel::Red,
+        }
+    }
+}
+
+impl std::fmt::Display for TankLabel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            TankLabel::Red => write!(f, "Red"),
+            TankLabel::Blue => write!(f, "Blue"),
+        }
+    }
+}
+
 #[derive(Debug, Default, Clone, Component)]
 #[require(
     Transform,
@@ -17,17 +45,19 @@ use super::NamedGroup;
     CollisionGroups(TankController::collision_groups),
     SolverGroups(TankController::solver_groups),
     TnuaController,
-    TnuaRapier3dSensorShape(TankController::tnua_rapier3d_sensor_shape)
+    TnuaRapier3dSensorShape(TankController::tnua_rapier3d_sensor_shape),
+    TankAlive
 )]
 pub struct TankController {
     pub movement: Option<Dir2>,
     pub fire: bool,
     pub fire_timer: Option<Timer>,
+    pub label: TankLabel,
 }
 
 impl TankController {
     pub(crate) fn scene_root(asset_server: &AssetServer) -> SceneRoot {
-        SceneRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset("tank.glb")))
+        SceneRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset("models/tank.glb")))
     }
 
     const fn tank_speed() -> TankSpeed {

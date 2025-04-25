@@ -1,9 +1,11 @@
+mod bullet;
 mod explosion;
 mod groups;
 mod others;
 mod smoke_vfx;
 mod tank;
 
+pub use bullet::*;
 pub use explosion::*;
 pub use groups::*;
 pub use others::*;

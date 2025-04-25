@@ -11,6 +11,7 @@ pub fn setup<'a>(
             &mut commands,
             &mut tank_colors,
             "Player 1",
+            TankLabel::Blue,
             Vec3::new(-15.0, 1.0, -15.0),
             Color::srgb(0.0, 0.5, 1.0), // Blue
         )
@@ -26,6 +27,7 @@ pub fn setup<'a>(
             &mut commands,
             &mut tank_colors,
             "Player 2",
+            TankLabel::Red,
             Vec3::new(15.0, 1.0, 15.0),
             Color::srgb(1.0, 0.0, 0.0), // Red
         )
@@ -57,5 +59,12 @@ pub fn update(keys: Res<ButtonInput<KeyCode>>, mut q: Query<(&PlayerInputs, &mut
 
         controller.movement = Dir2::new(movement).ok();
         controller.fire = keys.just_pressed(inputs.fire);
+    }
+}
+
+pub fn handle_game_playing_exit(mut q: Query<&mut TankController, With<PlayerInputs>>) {
+    for mut controller in q.iter_mut() {
+        controller.movement = None;
+        controller.fire = false;
     }
 }

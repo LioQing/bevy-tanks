@@ -17,6 +17,7 @@ pub fn update(mut commands: Commands, q: Query<(Entity, &Transform), With<Bullet
 pub fn handle_tank_collision(
     mut commands: Commands,
     mut collision_events: EventReader<CollisionEvent>,
+    mut game_state: ResMut<NextState<GameState>>,
     tank_explosion_prefab: Res<TankExplosionPrefab>,
     bullet_q: Query<(), With<Bullet>>,
     tank_q: Query<(), With<TankController>>,
@@ -38,6 +39,7 @@ pub fn handle_tank_collision(
         };
 
         commands.entity(bullet).despawn_recursive();
+        commands.entity(tank).remove::<TankAlive>();
 
         tank_explosion_prefab.spawn(
             &mut commands,
@@ -46,5 +48,7 @@ pub fn handle_tank_collision(
             tank,
             transform_q.get(tank).expect("tank transfrom").translation,
         );
+
+        game_state.set(GameState::Over);
     }
 }

@@ -8,6 +8,7 @@ mod explosion;
 mod player;
 mod smoke_vfx;
 mod tank;
+mod ui;
 
 pub fn plugin(app: &mut App) {
     app.init_resource::<TankColors>();
@@ -15,17 +16,20 @@ pub fn plugin(app: &mut App) {
     app.init_resource::<BulletPrefab>();
     app.init_resource::<TankExplosionPrefab>();
     app.init_resource::<SmokeVfxParticlePrefab>();
+    app.init_resource::<GameOverUiPrefab>();
+    app.init_resource::<ButtonUiPrefab>();
+    app.init_resource::<Typography>();
+
+    app.add_event::<GameOverUiButtonEvent>();
+
+    app.init_state::<GameState>();
 
     app.add_observer(tank::observe_scene_instance_ready);
 
-    app.add_systems(
-        Startup,
-        (setup_camera, setup_floor, setup_light, player::setup),
-    );
+    app.add_systems(Startup, (setup_camera, setup_floor, setup_light));
     app.add_systems(
         Update,
         (
-            player::update.before(tank::update),
             tank::update.in_set(TnuaUserControlsSystemSet),
             tank::update_smoke.after(TnuaUserControlsSystemSet),
             bullet::update,
@@ -33,8 +37,24 @@ pub fn plugin(app: &mut App) {
             explosion::update,
             smoke_vfx::update,
             smoke_vfx::update_particle,
+            // Playing
+            player::update
+                .before(tank::update)
+                .run_if(in_state(GameState::Playing)),
+            // Over
+            (
+                ui::update_interaction::<GameOverUiButtonEvent>,
+                ui::handle_game_over_button_event,
+            )
+                .run_if(in_state(GameState::Over)),
         ),
     );
+    app.add_systems(OnEnter(GameState::Playing), player::setup);
+    app.add_systems(OnExit(GameState::Playing), player::handle_game_playing_exit);
+    app.add_systems(OnEnter(GameState::Over), ui::handle_game_over_enter);
+    app.add_systems(OnExit(GameState::Over), cleanup::<TankController>);
+
+    app.enable_state_scoped_entities::<GameState>();
 }
 
 fn setup_camera(mut commands: Commands) {
@@ -88,4 +108,10 @@ fn setup_light(mut commands: Commands) {
             ..default()
         },
     ));
+}
+
+fn cleanup<T: Component>(mut commands: Commands, q: Query<Entity, With<T>>) {
+    for e in q.iter() {
+        commands.entity(e).despawn_recursive();
+    }
 }

@@ -75,6 +75,7 @@ pub fn update(
             movement,
             fire,
             fire_timer,
+            ..
         } = &mut *controller;
 
         // Movement

@@ -16,3 +16,7 @@ bevy_rapier3d.workspace = true
 bevy-tnua.workspace = true
 bevy-tnua-rapier3d.workspace = true
 log.workspace = true
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom = { version = "0.3", features = ["wasm_js"] }
+uuid = { version = "1", features = ["js"] }

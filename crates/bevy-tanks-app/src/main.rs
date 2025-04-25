@@ -26,8 +26,6 @@ fn main() -> AppExit {
                 .set(WindowPlugin {
                     primary_window: Some(Window {
                         title: "Bevy Tanks".to_string(),
-                        #[cfg(target_arch = "wasm32")]
-                        canvas: Some("#game-canvas".to_string()),
                         ..default()
                     }),
                     ..default()

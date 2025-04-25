@@ -458,7 +458,9 @@ dependencies = [
  "bevy-tnua-rapier3d",
  "bevy_rand",
  "bevy_rapier3d",
+ "getrandom 0.3.2",
  "log",
+ "uuid",
 ]
 
 [[package]]
@@ -2542,9 +2544,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "73fea8450eea4bac3940448fb7ae50d91f034f941199fcd9d909a5a07aa455f0"
 dependencies = [
  "cfg-if",
+ "js-sys",
  "libc",
  "r-efi",
  "wasi 0.14.2+wasi-0.2.4",
+ "wasm-bindgen",
 ]
 
 [[package]]
@@ -5202,6 +5206,7 @@ checksum = "b3758f5e68192bb96cc8f9b7e2c2cfdabb435499a28499a42f8f984092adad4b"
 dependencies = [
  "getrandom 0.2.15",
  "serde",
+ "wasm-bindgen",
 ]
 
 [[package]]

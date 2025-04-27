@@ -1,43 +1,77 @@
 use bevy::prelude::*;
 use bevy_tanks_data::*;
+use rand_distr::Normal;
 
 pub fn setup<'a>(
     mut commands: Commands,
     mut tank_colors: ResMut<TankColors>,
-    tank_prefab: Res<TankPrefab>,
+    tank_assets: Res<TankAssets>,
 ) {
-    tank_prefab
-        .spawn(
-            &mut commands,
-            &mut tank_colors,
-            "Player 1",
-            TankLabel::Blue,
-            Vec3::new(-15.0, 1.0, -15.0),
-            Color::srgb(0.0, 0.5, 1.0), // Blue
-        )
-        .insert(PlayerInputs {
+    let TankColors(tank_colors) = &mut *tank_colors;
+
+    let mut spawn = |name, label, position, color, player_inputs| {
+        let smoke_vfx = SmokeVfx {
+            timer: Timer::from_seconds(0.02, TimerMode::Repeating),
+            radius: Normal::new(0.5, 0.2).expect("normal distribution"),
+            velocity: [
+                Normal::new(0.0, 1.0).expect("normal distribution"),
+                Normal::new(1.0, 1.0).expect("normal distribution"),
+                Normal::new(0.0, 1.0).expect("normal distribution"),
+            ],
+            lifetime: Normal::new(0.5, 0.2).expect("normal distribution"),
+            time_scale: 0.0,
+        };
+
+        let mut entity_commands = commands.spawn((
+            Name::new(name),
+            TankController { label, ..default() },
+            Transform::from_translation(position).looking_at(Vec3::ZERO, Vec3::Y),
+            tank_assets.scene_root.clone(),
+            player_inputs,
+        ));
+
+        entity_commands.with_children(|children| {
+            children.spawn((
+                Name::new("Left Smoke VFX"),
+                Transform::from_xyz(-1.0, 0.0, 0.8),
+                smoke_vfx.clone(),
+            ));
+            children.spawn((
+                Name::new("Right Smoke VFX"),
+                Transform::from_xyz(1.0, 0.0, 0.8),
+                smoke_vfx,
+            ));
+        });
+
+        tank_colors.insert(entity_commands.id(), color);
+    };
+
+    spawn(
+        "Player 1",
+        TankLabel::Blue,
+        Vec3::new(-15.0, 1.0, -15.0),
+        Color::srgb(0.0, 0.5, 1.0),
+        PlayerInputs {
             forward: KeyCode::KeyW,
             backward: KeyCode::KeyS,
             left: KeyCode::KeyA,
             right: KeyCode::KeyD,
             fire: KeyCode::Space,
-        });
-    tank_prefab
-        .spawn(
-            &mut commands,
-            &mut tank_colors,
-            "Player 2",
-            TankLabel::Red,
-            Vec3::new(15.0, 1.0, 15.0),
-            Color::srgb(1.0, 0.0, 0.0), // Red
-        )
-        .insert(PlayerInputs {
+        },
+    );
+    spawn(
+        "Player 2",
+        TankLabel::Red,
+        Vec3::new(15.0, 1.0, 15.0),
+        Color::srgb(1.0, 0.0, 0.0),
+        PlayerInputs {
             forward: KeyCode::ArrowUp,
             backward: KeyCode::ArrowDown,
             left: KeyCode::ArrowLeft,
             right: KeyCode::ArrowRight,
             fire: KeyCode::Enter,
-        });
+        },
+    );
 }
 
 pub fn update(keys: Res<ButtonInput<KeyCode>>, mut q: Query<(&PlayerInputs, &mut TankController)>) {

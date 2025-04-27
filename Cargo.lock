@@ -488,6 +488,7 @@ dependencies = [
  "bevy_rapier3d",
  "log",
  "rand",
+ "rand_distr",
 ]
 
 [[package]]

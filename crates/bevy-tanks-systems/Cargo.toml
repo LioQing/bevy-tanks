@@ -14,4 +14,5 @@ bevy_rand.workspace = true
 bevy_rapier3d.workspace = true
 bevy-tnua.workspace = true
 rand.workspace = true
+rand_distr.workspace = true
 log.workspace = true

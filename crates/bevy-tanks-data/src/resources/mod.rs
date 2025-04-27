@@ -3,11 +3,9 @@ mod explosion;
 mod smoke_vfx;
 mod tank;
 mod typography;
-mod ui;
 
 pub use bullet::*;
 pub use explosion::*;
 pub use smoke_vfx::*;
 pub use tank::*;
 pub use typography::*;
-pub use ui::*;

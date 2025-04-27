@@ -6,7 +6,7 @@ use rand::prelude::*;
 pub fn update(
     mut commands: Commands,
     time: Res<Time>,
-    smoke_vfx_prefab: Res<SmokeVfxParticlePrefab>,
+    smoke_vfx_assets: Res<SmokeVfxParticleAssets>,
     mut q: Query<(&mut SmokeVfx, &mut Entropy<WyRand>, &GlobalTransform)>,
 ) {
     for (mut smoke_vfx, mut rng, transform) in q.iter_mut() {
@@ -21,13 +21,17 @@ pub fn update(
             );
             let lifetime = rng.sample(&smoke_vfx.lifetime).max(0.1);
 
-            smoke_vfx_prefab.spawn(
-                &mut commands,
-                Timer::from_seconds(lifetime, TimerMode::Once),
-                radius,
-                velocity,
-                transform.translation(),
-            );
+            commands.spawn((
+                Name::new("Smoke VFX"),
+                SmokeVfxParticle {
+                    timer: Timer::from_seconds(lifetime, TimerMode::Once),
+                    radius,
+                    velocity,
+                },
+                Transform::from_translation(transform.translation()).with_scale(Vec3::ONE * 1e-3),
+                Mesh3d(smoke_vfx_assets.mesh.clone()),
+                MeshMaterial3d(smoke_vfx_assets.material.clone()),
+            ));
         }
     }
 }

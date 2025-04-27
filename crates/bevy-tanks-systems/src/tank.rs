@@ -2,13 +2,14 @@ use bevy::{prelude::*, scene::SceneInstanceReady};
 use bevy_rapier3d::prelude::*;
 use bevy_tanks_data::*;
 use bevy_tnua::prelude::*;
+use rand_distr::Normal;
 
 pub fn observe_scene_instance_ready(
     trigger: Trigger<SceneInstanceReady>,
     mut commands: Commands,
     mut materials: ResMut<Assets<StandardMaterial>>,
     tank_colors: Res<TankColors>,
-    tank_prefab: Res<TankPrefab>,
+    tank_assets: Res<TankAssets>,
     tank_q: Query<(), With<TankController>>,
     children_q: Query<&Children>,
     mesh_material_q: Query<(&Name, &MeshMaterial3d<StandardMaterial>)>,
@@ -49,7 +50,7 @@ pub fn observe_scene_instance_ready(
         // Insert animation graph
         if let Ok(()) = animation_player_q.get(descendant) {
             commands.entity(descendant).insert(AnimationGraphHandle(
-                tank_prefab.fire_animation_graph.clone(),
+                tank_assets.fire_animation_graph.clone(),
             ));
         }
     }
@@ -58,8 +59,8 @@ pub fn observe_scene_instance_ready(
 pub fn update(
     mut commands: Commands,
     time: Res<Time>,
-    bullet_prefab: Res<BulletPrefab>,
-    tank_prefab: Res<TankPrefab>,
+    bullet_assets: Res<BulletAssets>,
+    tank_assets: Res<TankAssets>,
     mut tank_q: Query<(
         Entity,
         &Transform,
@@ -104,25 +105,41 @@ pub fn update(
         const FORWARD_OFFSET: f32 = 1.5;
         const UP_OFFSET: f32 = 1.3;
         if *fire {
-            bullet_prefab.spawn(
-                &mut commands,
-                transform.clone().with_translation(
-                    transform.translation
-                        + velocity * time.delta_secs()
-                        + transform.forward() * FORWARD_OFFSET
-                        + transform.up() * UP_OFFSET,
-                ),
+            let bullet_transform = transform.clone().with_translation(
+                transform.translation
+                    + velocity * time.delta_secs()
+                    + transform.forward() * FORWARD_OFFSET
+                    + transform.up() * UP_OFFSET,
             );
+
+            commands.spawn((
+                Name::new("Bullet"),
+                Bullet,
+                bullet_transform,
+                Mesh3d(bullet_assets.mesh.clone()),
+                MeshMaterial3d(bullet_assets.material.clone()),
+                Bullet::velocity(bullet_transform.forward()),
+                SmokeVfx {
+                    timer: Timer::from_seconds(0.02, TimerMode::Repeating),
+                    radius: Normal::new(0.75, 0.2).expect("normal distribution"),
+                    velocity: bullet_transform
+                        .forward()
+                        .to_array()
+                        .map(|v| Normal::new(v, 1.0).expect("normal distribution")),
+                    lifetime: Normal::new(0.5, 0.2).expect("normal distribution"),
+                    ..default()
+                },
+            ));
 
             for descendant in children_q.iter_descendants(entity) {
                 if let Ok(mut animation_player) = animation_player_q.get_mut(descendant) {
-                    if animation_player.is_playing_animation(tank_prefab.fire_animation_node) {
+                    if animation_player.is_playing_animation(tank_assets.fire_animation_node) {
                         animation_player
-                            .animation_mut(tank_prefab.fire_animation_node)
+                            .animation_mut(tank_assets.fire_animation_node)
                             .expect("fire animation")
                             .replay();
                     } else {
-                        animation_player.play(tank_prefab.fire_animation_node);
+                        animation_player.play(tank_assets.fire_animation_node);
                     }
                 }
             }

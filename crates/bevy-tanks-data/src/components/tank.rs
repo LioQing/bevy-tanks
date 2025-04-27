@@ -56,11 +56,11 @@ pub struct TankController {
 }
 
 impl TankController {
-    pub(crate) fn scene_root(asset_server: &AssetServer) -> SceneRoot {
+    pub fn scene_root(asset_server: &AssetServer) -> SceneRoot {
         SceneRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset("models/tank.glb")))
     }
 
-    const fn tank_speed() -> TankSpeed {
+    pub const fn tank_speed() -> TankSpeed {
         TankSpeed {
             linear: 10.0,
             angular: 2.0 * std::f32::consts::PI,
@@ -68,11 +68,11 @@ impl TankController {
         }
     }
 
-    const fn rigidbody() -> RigidBody {
+    pub const fn rigidbody() -> RigidBody {
         RigidBody::Dynamic
     }
 
-    fn collider() -> Collider {
+    pub fn collider() -> Collider {
         Collider::compound(vec![
             (
                 Vec3::new(0.0, 1.0, 0.0),
@@ -87,19 +87,19 @@ impl TankController {
         ])
     }
 
-    fn collision_groups() -> CollisionGroups {
+    pub fn collision_groups() -> CollisionGroups {
         CollisionGroups::new(NamedGroup::TANK, Group::all())
     }
 
-    fn solver_groups() -> SolverGroups {
+    pub fn solver_groups() -> SolverGroups {
         SolverGroups::new(NamedGroup::TANK, Group::all() & !NamedGroup::BULLET)
     }
 
-    fn tnua_rapier3d_sensor_shape() -> TnuaRapier3dSensorShape {
+    pub fn tnua_rapier3d_sensor_shape() -> TnuaRapier3dSensorShape {
         TnuaRapier3dSensorShape(Self::collider())
     }
 
-    pub(crate) fn fire_animation_clip(asset_server: &AssetServer) -> Handle<AnimationClip> {
+    pub fn fire_animation_clip(asset_server: &AssetServer) -> Handle<AnimationClip> {
         asset_server.load(GltfAssetLabel::Animation(0).from_asset("tank.glb"))
     }
 }

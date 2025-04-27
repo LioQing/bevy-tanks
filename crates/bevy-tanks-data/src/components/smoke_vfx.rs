@@ -28,6 +28,10 @@ impl Default for SmokeVfx {
     }
 }
 
+#[derive(Debug, Default, Clone, Component)]
+#[require(Transform, InheritedVisibility)]
+pub struct SmokeVfxContainer;
+
 #[derive(Debug, Clone, Component)]
 #[require(Transform, Mesh3d, MeshMaterial3d<StandardMaterial>)]
 pub struct SmokeVfxParticle {
@@ -37,11 +41,11 @@ pub struct SmokeVfxParticle {
 }
 
 impl SmokeVfxParticle {
-    pub(crate) fn mesh(meshes: &mut Assets<Mesh>) -> Handle<Mesh> {
+    pub fn mesh(meshes: &mut Assets<Mesh>) -> Handle<Mesh> {
         meshes.add(Mesh::from(Sphere::new(0.5)))
     }
 
-    pub(crate) fn material(materials: &mut Assets<StandardMaterial>) -> Handle<StandardMaterial> {
+    pub fn material(materials: &mut Assets<StandardMaterial>) -> Handle<StandardMaterial> {
         materials.add(StandardMaterial {
             base_color: Color::WHITE,
             perceptual_roughness: 1.0,

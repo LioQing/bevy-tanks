@@ -1,5 +1,5 @@
 # Bevy Tanks
 
-![Cover](./media/cover.png)
+![Cover](./media/Cover.png)
 
 A simple 3D tank game made with Bevy.

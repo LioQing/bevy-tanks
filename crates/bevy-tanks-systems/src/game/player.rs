@@ -22,28 +22,30 @@ pub fn setup<'a>(
             time_scale: 0.0,
         };
 
-        let mut entity_commands = commands.spawn((
-            Name::new(name),
-            TankController { label, ..default() },
-            Transform::from_translation(position).looking_at(Vec3::ZERO, Vec3::Y),
-            tank_assets.scene_root.clone(),
-            player_inputs,
-        ));
+        let entity_id = commands
+            .spawn((
+                Name::new(name),
+                StateScoped(AppState::Game),
+                TankController { label, ..default() },
+                Transform::from_translation(position).looking_at(Vec3::ZERO, Vec3::Y),
+                tank_assets.scene_root.clone(),
+                player_inputs,
+            ))
+            .with_children(|children| {
+                children.spawn((
+                    Name::new("Left Smoke VFX"),
+                    Transform::from_xyz(-1.0, 0.0, 0.8),
+                    smoke_vfx.clone(),
+                ));
+                children.spawn((
+                    Name::new("Right Smoke VFX"),
+                    Transform::from_xyz(1.0, 0.0, 0.8),
+                    smoke_vfx,
+                ));
+            })
+            .id();
 
-        entity_commands.with_children(|children| {
-            children.spawn((
-                Name::new("Left Smoke VFX"),
-                Transform::from_xyz(-1.0, 0.0, 0.8),
-                smoke_vfx.clone(),
-            ));
-            children.spawn((
-                Name::new("Right Smoke VFX"),
-                Transform::from_xyz(1.0, 0.0, 0.8),
-                smoke_vfx,
-            ));
-        });
-
-        tank_colors.insert(entity_commands.id(), color);
+        tank_colors.insert(entity_id, color);
     };
 
     spawn(
@@ -96,7 +98,7 @@ pub fn update(keys: Res<ButtonInput<KeyCode>>, mut q: Query<(&PlayerInputs, &mut
     }
 }
 
-pub fn handle_game_playing_exit(mut q: Query<&mut TankController, With<PlayerInputs>>) {
+pub fn cleanup_game_playing(mut q: Query<&mut TankController, With<PlayerInputs>>) {
     for mut controller in q.iter_mut() {
         controller.movement = None;
         controller.fire = false;

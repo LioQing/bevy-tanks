@@ -14,9 +14,9 @@ pub fn update(mut commands: Commands, q: Query<(Entity, &Transform), With<Bullet
     }
 }
 
-pub fn handle_tank_collision(
+pub fn update_tank_collision_events(
     mut commands: Commands,
-    mut collision_events: EventReader<CollisionEvent>,
+    mut collision_evr: EventReader<CollisionEvent>,
     mut game_state: ResMut<NextState<GameState>>,
     tank_explosion_assets: Res<TankExplosionAssets>,
     bullet_q: Query<(), With<Bullet>>,
@@ -25,7 +25,7 @@ pub fn handle_tank_collision(
     children_q: Query<&Children>,
     mesh_q: Query<(), With<Mesh3d>>,
 ) {
-    for collision_event in collision_events.read() {
+    for collision_event in collision_evr.read() {
         let (a, b) = match *collision_event {
             CollisionEvent::Started(a, b, ..) | CollisionEvent::Stopped(a, b, ..) => (a, b),
         };
@@ -35,7 +35,7 @@ pub fn handle_tank_collision(
         } else if bullet_q.get(b).is_ok() && tank_q.get(a).is_ok() {
             (b, a)
         } else {
-            continue;
+            return;
         };
 
         commands.entity(bullet).despawn_recursive();
@@ -50,6 +50,7 @@ pub fn handle_tank_collision(
 
         commands.spawn((
             Name::new("Tank Explosion"),
+            StateScoped(AppState::Game),
             Explosion {
                 radius: 2.5,
                 entity: Some(tank),

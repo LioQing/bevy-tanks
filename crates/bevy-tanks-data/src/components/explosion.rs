@@ -13,11 +13,11 @@ pub struct Explosion {
 }
 
 impl Explosion {
-    pub(crate) fn mesh(meshes: &mut Assets<Mesh>) -> Handle<Mesh> {
+    pub fn mesh(meshes: &mut Assets<Mesh>) -> Handle<Mesh> {
         meshes.add(Mesh::from(Sphere::new(0.5)))
     }
 
-    pub(crate) fn material(materials: &mut Assets<StandardMaterial>) -> Handle<StandardMaterial> {
+    pub fn material(materials: &mut Assets<StandardMaterial>) -> Handle<StandardMaterial> {
         materials.add(StandardMaterial {
             base_color: Color::srgb(1.0, 0.5, 0.0),
             perceptual_roughness: 1.0,

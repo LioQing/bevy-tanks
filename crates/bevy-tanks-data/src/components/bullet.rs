@@ -54,7 +54,7 @@ impl Bullet {
     }
 
     pub fn solver_groups() -> SolverGroups {
-        SolverGroups::new(NamedGroup::BULLET, NamedGroup::BULLET)
+        SolverGroups::new(NamedGroup::BULLET, Group::empty())
     }
 
     pub fn velocity(direction: Dir3) -> Velocity {

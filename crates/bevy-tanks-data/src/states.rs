@@ -7,7 +7,8 @@ pub enum AppState {
     Game,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash, Default, States)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Default, SubStates)]
+#[source(AppState = AppState::Game)]
 pub enum GameState {
     #[default]
     Playing,

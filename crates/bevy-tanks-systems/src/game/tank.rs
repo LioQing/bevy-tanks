@@ -19,8 +19,8 @@ pub fn observe_scene_instance_ready(
         return;
     };
 
+    let TankColors(tank_colors) = &*tank_colors;
     let color = tank_colors
-        .0
         .get(&trigger.entity())
         .unwrap_or_else(|| panic!("Color for {} not found", trigger.entity()));
 
@@ -114,6 +114,7 @@ pub fn update(
 
             commands.spawn((
                 Name::new("Bullet"),
+                StateScoped(AppState::Game),
                 Bullet,
                 bullet_transform,
                 Mesh3d(bullet_assets.mesh.clone()),

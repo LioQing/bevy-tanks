@@ -3,11 +3,20 @@ use bevy_rand::prelude::*;
 use bevy_tanks_data::*;
 use rand::prelude::*;
 
+pub fn setup(mut commands: Commands) {
+    commands.spawn((
+        Name::new("Smoke VFX Container"),
+        StateScoped(AppState::Game),
+        SmokeVfxContainer,
+    ));
+}
+
 pub fn update(
     mut commands: Commands,
     time: Res<Time>,
     smoke_vfx_assets: Res<SmokeVfxParticleAssets>,
     mut q: Query<(&mut SmokeVfx, &mut Entropy<WyRand>, &GlobalTransform)>,
+    container: Single<Entity, With<SmokeVfxContainer>>,
 ) {
     for (mut smoke_vfx, mut rng, transform) in q.iter_mut() {
         let scaled_delta = time.delta().mul_f32(smoke_vfx.time_scale);
@@ -21,8 +30,9 @@ pub fn update(
             );
             let lifetime = rng.sample(&smoke_vfx.lifetime).max(0.1);
 
-            commands.spawn((
-                Name::new("Smoke VFX"),
+            commands.entity(*container).with_child((
+                Name::new("Smoke VFX Particle"),
+                StateScoped(AppState::Game),
                 SmokeVfxParticle {
                     timer: Timer::from_seconds(lifetime, TimerMode::Once),
                     radius,

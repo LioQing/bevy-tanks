@@ -20,18 +20,6 @@ use super::{NamedGroup, SmokeVfx};
 pub struct Bullet;
 
 impl Bullet {
-    pub fn mesh(meshes: &mut Assets<Mesh>) -> Handle<Mesh> {
-        meshes.add(Mesh::from(Sphere::new(0.2)))
-    }
-
-    pub fn material(materials: &mut Assets<StandardMaterial>) -> Handle<StandardMaterial> {
-        materials.add(StandardMaterial {
-            base_color: Color::srgb(1.0, 0.5, 0.0),
-            emissive: LinearRgba::rgb(100.0, 50.0, 0.0),
-            ..default()
-        })
-    }
-
     pub fn point_light() -> PointLight {
         PointLight {
             intensity: 1e4,

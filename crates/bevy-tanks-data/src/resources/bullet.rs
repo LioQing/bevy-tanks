@@ -1,7 +1,5 @@
 use bevy::prelude::*;
 
-use crate::Bullet;
-
 #[derive(Debug, Resource)]
 pub struct BulletAssets {
     pub mesh: Handle<Mesh>,
@@ -11,8 +9,18 @@ pub struct BulletAssets {
 impl FromWorld for BulletAssets {
     fn from_world(world: &mut World) -> Self {
         Self {
-            mesh: Bullet::mesh(&mut world.get_resource_mut().expect("meshes")),
-            material: Bullet::material(&mut world.get_resource_mut().expect("materials")),
+            mesh: world
+                .get_resource_mut::<Assets<_>>()
+                .expect("meshes")
+                .add(Mesh::from(Sphere::new(0.2))),
+            material: world
+                .get_resource_mut::<Assets<_>>()
+                .expect("materials")
+                .add(StandardMaterial {
+                    base_color: Color::srgb(1.0, 0.5, 0.0),
+                    emissive: LinearRgba::rgb(100.0, 50.0, 0.0),
+                    ..default()
+                }),
         }
     }
 }

@@ -28,7 +28,7 @@ pub fn setup<'a>(
                 StateScoped(AppState::Game),
                 TankController { label, ..default() },
                 Transform::from_translation(position).looking_at(Vec3::ZERO, Vec3::Y),
-                tank_assets.scene_root.clone(),
+                SceneRoot(tank_assets.scene.clone()),
                 player_inputs,
             ))
             .with_children(|children| {

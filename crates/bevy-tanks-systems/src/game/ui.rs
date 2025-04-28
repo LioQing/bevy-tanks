@@ -3,6 +3,30 @@ use bevy_tanks_data::*;
 
 use crate::common::ui::button;
 
+pub fn setup_loading(mut commands: Commands, typography: Res<Typography>) {
+    commands
+        .spawn((
+            Name::new("Loading UI"),
+            StateScoped(GameState::Loading),
+            Node {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                flex_direction: FlexDirection::Column,
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                ..default()
+            },
+            BackgroundColor(Color::BLACK),
+        ))
+        .with_children(|children| {
+            children.spawn((
+                Text::new("Loading..."),
+                typography.subtitle.clone(),
+                TextLayout::new_with_justify(JustifyText::Center),
+            ));
+        });
+}
+
 pub fn setup_game_over(
     mut commands: Commands,
     typography: Res<Typography>,
@@ -11,7 +35,6 @@ pub fn setup_game_over(
     commands
         .spawn((
             Name::new("Game Over UI"),
-            StateScoped(AppState::Game),
             StateScoped(GameState::Over),
             Node {
                 width: Val::Percent(100.0),

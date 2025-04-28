@@ -56,10 +56,6 @@ pub struct TankController {
 }
 
 impl TankController {
-    pub fn scene_root(asset_server: &AssetServer) -> SceneRoot {
-        SceneRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset("models/tank.glb")))
-    }
-
     pub const fn tank_speed() -> TankSpeed {
         TankSpeed {
             linear: 10.0,
@@ -97,10 +93,6 @@ impl TankController {
 
     pub fn tnua_rapier3d_sensor_shape() -> TnuaRapier3dSensorShape {
         TnuaRapier3dSensorShape(Self::collider())
-    }
-
-    pub fn fire_animation_clip(asset_server: &AssetServer) -> Handle<AnimationClip> {
-        asset_server.load(GltfAssetLabel::Animation(0).from_asset("tank.glb"))
     }
 }
 

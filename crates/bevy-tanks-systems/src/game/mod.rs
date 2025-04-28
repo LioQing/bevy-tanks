@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{asset::RecursiveDependencyLoadState, prelude::*};
 use bevy_tanks_data::*;
 use bevy_tnua::prelude::*;
 
@@ -31,23 +31,29 @@ pub fn plugin(app: &mut App) {
         .add_systems(
             Update,
             (
-                tank::update.in_set(TnuaUserControlsSystemSet),
-                tank::update_smoke.after(TnuaUserControlsSystemSet),
-                bullet::update,
-                bullet::update_tank_collision_events,
-                explosion::update,
-                smoke_vfx::update,
-                smoke_vfx::update_particle,
-                // Playing
-                player::update
-                    .before(tank::update)
-                    .run_if(in_state(GameState::Playing)),
-                // Over
-                button::update_interaction::<GameOverUiButtonEvent>
-                    .run_if(in_state(GameState::Over)),
+                // Loading
+                update_loading.run_if(in_state(GameState::Loading)),
+                (
+                    tank::update.in_set(TnuaUserControlsSystemSet),
+                    tank::update_smoke.after(TnuaUserControlsSystemSet),
+                    bullet::update,
+                    bullet::update_tank_collision_events,
+                    explosion::update,
+                    smoke_vfx::update,
+                    smoke_vfx::update_particle,
+                    // Playing
+                    player::update
+                        .before(tank::update)
+                        .run_if(in_state(GameState::Playing)),
+                    // Over
+                    button::update_interaction::<GameOverUiButtonEvent>
+                        .run_if(in_state(GameState::Over)),
+                )
+                    .run_if(not(in_state(GameState::Loading))),
             )
                 .run_if(in_state(AppState::Game)),
         )
+        .add_systems(OnEnter(GameState::Loading), ui::setup_loading)
         .add_systems(OnEnter(GameState::Playing), player::setup)
         .add_systems(OnExit(GameState::Playing), player::cleanup_game_playing)
         .add_systems(OnEnter(GameState::Over), ui::setup_game_over)
@@ -61,6 +67,34 @@ fn setup(mut commands: Commands) {
     commands.init_resource::<BulletAssets>();
     commands.init_resource::<TankExplosionAssets>();
     commands.init_resource::<SmokeVfxParticleAssets>();
+}
+
+fn update_loading(
+    mut game_state: ResMut<NextState<GameState>>,
+    asset_server: Res<AssetServer>,
+    tank_assets: Res<TankAssets>,
+) {
+    match asset_server.recursive_dependency_load_state(&tank_assets.scene) {
+        RecursiveDependencyLoadState::Loading | RecursiveDependencyLoadState::NotLoaded => return,
+        RecursiveDependencyLoadState::Failed(e) => {
+            log::error!("Failed to load tank scene: {e}");
+            return;
+        }
+        _ => {}
+    }
+
+    match asset_server.recursive_dependency_load_state(&tank_assets.fire_animation) {
+        RecursiveDependencyLoadState::Loading | RecursiveDependencyLoadState::NotLoaded => return,
+        RecursiveDependencyLoadState::Failed(e) => {
+            log::error!("Failed to load tank fire animation: {e}");
+            return;
+        }
+        _ => {}
+    }
+
+    log::debug!("Tank scene and fire animation loaded");
+
+    game_state.set(GameState::Playing);
 }
 
 fn cleanup(mut commands: Commands) {

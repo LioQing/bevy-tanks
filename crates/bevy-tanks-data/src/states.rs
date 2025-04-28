@@ -11,6 +11,7 @@ pub enum AppState {
 #[source(AppState = AppState::Game)]
 pub enum GameState {
     #[default]
+    Loading,
     Playing,
     Over,
 }

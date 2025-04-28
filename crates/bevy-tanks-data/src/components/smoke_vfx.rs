@@ -40,20 +40,6 @@ pub struct SmokeVfxParticle {
     pub velocity: Vec3,
 }
 
-impl SmokeVfxParticle {
-    pub fn mesh(meshes: &mut Assets<Mesh>) -> Handle<Mesh> {
-        meshes.add(Mesh::from(Sphere::new(0.5)))
-    }
-
-    pub fn material(materials: &mut Assets<StandardMaterial>) -> Handle<StandardMaterial> {
-        materials.add(StandardMaterial {
-            base_color: Color::WHITE,
-            perceptual_roughness: 1.0,
-            ..default()
-        })
-    }
-}
-
 impl Default for SmokeVfxParticle {
     fn default() -> Self {
         Self {

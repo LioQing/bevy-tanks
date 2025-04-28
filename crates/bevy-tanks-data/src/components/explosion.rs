@@ -12,21 +12,6 @@ pub struct Explosion {
     pub entity: Option<Entity>,
 }
 
-impl Explosion {
-    pub fn mesh(meshes: &mut Assets<Mesh>) -> Handle<Mesh> {
-        meshes.add(Mesh::from(Sphere::new(0.5)))
-    }
-
-    pub fn material(materials: &mut Assets<StandardMaterial>) -> Handle<StandardMaterial> {
-        materials.add(StandardMaterial {
-            base_color: Color::srgb(1.0, 0.5, 0.0),
-            perceptual_roughness: 1.0,
-            emissive: LinearRgba::rgb(100.0, 50.0, 0.0),
-            ..default()
-        })
-    }
-}
-
 impl Default for Explosion {
     fn default() -> Self {
         Self {

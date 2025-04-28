@@ -7,6 +7,12 @@ pub enum MainMenuUiButtonEvent {
 }
 
 #[derive(Debug, Clone, Event)]
+pub enum PausedUiButtonEvent {
+    Resume,
+    MainMenu,
+}
+
+#[derive(Debug, Clone, Event)]
 pub enum GameOverUiButtonEvent {
     PlayAgain,
     MainMenu,

@@ -15,8 +15,10 @@ mod ui;
 pub fn plugin(app: &mut App) {
     app.add_sub_state::<GameState>()
         .enable_state_scoped_entities::<GameState>()
+        .add_state_scoped_event::<PausedUiButtonEvent>(GameState::Paused)
         .add_state_scoped_event::<GameOverUiButtonEvent>(GameState::Over)
         .add_observer(tank::observe_scene_instance_ready)
+        .add_observer(ui::observe_paused_button)
         .add_observer(ui::observe_game_over_button)
         .add_systems(
             OnEnter(AppState::Game),
@@ -33,6 +35,7 @@ pub fn plugin(app: &mut App) {
             (
                 // Loading
                 update_loading.run_if(in_state(GameState::Loading)),
+                // Not loading
                 (
                     tank::update.in_set(TnuaUserControlsSystemSet),
                     tank::update_smoke.after(TnuaUserControlsSystemSet),
@@ -42,9 +45,17 @@ pub fn plugin(app: &mut App) {
                     smoke_vfx::update,
                     smoke_vfx::update_particle,
                     // Playing
-                    player::update
-                        .before(tank::update)
+                    (
+                        player::update.before(tank::update),
+                        ui::update_pause_when_playing,
+                    )
                         .run_if(in_state(GameState::Playing)),
+                    // Paused
+                    (
+                        button::update_interaction::<PausedUiButtonEvent>,
+                        ui::update_paused,
+                    )
+                        .run_if(in_state(GameState::Paused)),
                     // Over
                     button::update_interaction::<GameOverUiButtonEvent>
                         .run_if(in_state(GameState::Over)),
@@ -54,8 +65,22 @@ pub fn plugin(app: &mut App) {
                 .run_if(in_state(AppState::Game)),
         )
         .add_systems(OnEnter(GameState::Loading), ui::setup_loading)
-        .add_systems(OnEnter(GameState::Playing), player::setup)
+        .add_systems(
+            OnTransition {
+                exited: GameState::Loading,
+                entered: GameState::Playing,
+            },
+            player::setup,
+        )
+        .add_systems(
+            OnTransition {
+                exited: GameState::Over,
+                entered: GameState::Playing,
+            },
+            player::setup,
+        )
         .add_systems(OnExit(GameState::Playing), player::cleanup_game_playing)
+        .add_systems(OnEnter(GameState::Paused), ui::setup_paused)
         .add_systems(OnEnter(GameState::Over), ui::setup_game_over)
         .add_systems(OnExit(GameState::Over), common::cleanup::<TankController>)
         .add_systems(OnExit(AppState::Game), cleanup);

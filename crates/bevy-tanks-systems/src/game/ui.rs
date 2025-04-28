@@ -27,6 +27,77 @@ pub fn setup_loading(mut commands: Commands, typography: Res<Typography>) {
         });
 }
 
+pub fn setup_paused(mut commands: Commands, typography: Res<Typography>) {
+    commands
+        .spawn((
+            Name::new("Pause UI"),
+            StateScoped(GameState::Paused),
+            Node {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                flex_direction: FlexDirection::Column,
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                ..default()
+            },
+        ))
+        .with_children(|children| {
+            children.spawn((
+                Text::new("Paused"),
+                typography.subtitle.clone(),
+                TextLayout::new_with_justify(JustifyText::Center),
+            ));
+            children.spawn(Node {
+                height: Val::Px(32.0),
+                ..default()
+            });
+            button::spawn(children, &typography, "Resume", PausedUiButtonEvent::Resume);
+            children.spawn(Node {
+                height: Val::Px(12.0),
+                ..default()
+            });
+            button::spawn(
+                children,
+                &typography,
+                "Main Menu",
+                PausedUiButtonEvent::MainMenu,
+            );
+        });
+}
+
+pub fn update_paused(
+    mut game_state: ResMut<NextState<GameState>>,
+    buttons: Res<ButtonInput<KeyCode>>,
+) {
+    if buttons.just_pressed(KeyCode::Escape) {
+        game_state.set(GameState::Playing);
+    }
+}
+
+pub fn observe_paused_button(
+    trigger: Trigger<PausedUiButtonEvent>,
+    mut game_state: ResMut<NextState<GameState>>,
+    mut app_state: ResMut<NextState<AppState>>,
+) {
+    match trigger.event() {
+        PausedUiButtonEvent::Resume => {
+            game_state.set(GameState::Playing);
+        }
+        PausedUiButtonEvent::MainMenu => {
+            app_state.set(AppState::MainMenu);
+        }
+    }
+}
+
+pub fn update_pause_when_playing(
+    mut game_state: ResMut<NextState<GameState>>,
+    buttons: Res<ButtonInput<KeyCode>>,
+) {
+    if buttons.just_pressed(KeyCode::Escape) {
+        game_state.set(GameState::Paused);
+    }
+}
+
 pub fn setup_game_over(
     mut commands: Commands,
     typography: Res<Typography>,
@@ -64,7 +135,6 @@ pub fn setup_game_over(
                 height: Val::Px(32.0),
                 ..default()
             });
-
             children
                 .spawn(Node {
                     flex_direction: FlexDirection::Row,

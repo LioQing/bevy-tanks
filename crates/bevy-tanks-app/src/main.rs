@@ -2,6 +2,7 @@ use bevy::{
     log::{Level, LogPlugin},
     prelude::*,
 };
+use bevy_enhanced_input::prelude::*;
 use bevy_rand::prelude::*;
 use bevy_rapier3d::prelude::*;
 use bevy_tnua::prelude::*;
@@ -30,6 +31,7 @@ fn main() -> AppExit {
                     }),
                     ..default()
                 }),
+            EnhancedInputPlugin,
             EntropyPlugin::<WyRand>::default(),
             RapierPhysicsPlugin::<NoUserData>::default(),
             TnuaRapier3dPlugin::default(),

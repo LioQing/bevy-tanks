@@ -147,6 +147,10 @@ pub fn update(
 
             *fire_timer = Some(Timer::new(speed.fire_cooldown, TimerMode::Once));
         }
+
+        // Reset movement and fire
+        *movement = None;
+        *fire = false;
     }
 }
 

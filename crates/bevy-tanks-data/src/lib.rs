@@ -1,5 +1,6 @@
 mod components;
 mod events;
+pub mod inputs;
 mod resources;
 mod states;
 

@@ -10,6 +10,7 @@ repository.workspace = true
 bevy-tanks-systems.path = "../bevy-tanks-systems"
 
 bevy.workspace = true
+bevy_enhanced_input.workspace = true
 bevy-inspector-egui.workspace = true
 bevy_rand.workspace = true
 bevy_rapier3d.workspace = true

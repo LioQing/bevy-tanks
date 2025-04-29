@@ -1,4 +1,5 @@
 use bevy::{asset::RecursiveDependencyLoadState, prelude::*};
+use bevy_enhanced_input::prelude::*;
 use bevy_tanks_data::*;
 use bevy_tnua::prelude::*;
 
@@ -13,13 +14,17 @@ mod tank;
 mod ui;
 
 pub fn plugin(app: &mut App) {
-    app.add_sub_state::<GameState>()
+    app.add_input_context::<PlayerInputs>()
+        .add_sub_state::<GameState>()
         .enable_state_scoped_entities::<GameState>()
         .add_state_scoped_event::<PausedUiButtonEvent>(GameState::Paused)
         .add_state_scoped_event::<GameOverUiButtonEvent>(GameState::Over)
         .add_observer(tank::observe_scene_instance_ready)
         .add_observer(ui::observe_paused_button)
         .add_observer(ui::observe_game_over_button)
+        .add_observer(player::observe_binding)
+        .add_observer(player::observe_movement)
+        .add_observer(player::observe_fire)
         .add_systems(
             OnEnter(AppState::Game),
             (
@@ -45,11 +50,7 @@ pub fn plugin(app: &mut App) {
                     smoke_vfx::update,
                     smoke_vfx::update_particle,
                     // Playing
-                    (
-                        player::update.before(tank::update),
-                        ui::update_pause_when_playing,
-                    )
-                        .run_if(in_state(GameState::Playing)),
+                    ui::update_pause_when_playing.run_if(in_state(GameState::Playing)),
                     // Paused
                     (
                         button::update_interaction::<PausedUiButtonEvent>,
@@ -86,14 +87,6 @@ pub fn plugin(app: &mut App) {
         .add_systems(OnExit(AppState::Game), cleanup);
 }
 
-fn setup(mut commands: Commands) {
-    commands.init_resource::<TankColors>();
-    commands.init_resource::<TankAssets>();
-    commands.init_resource::<BulletAssets>();
-    commands.init_resource::<TankExplosionAssets>();
-    commands.init_resource::<SmokeVfxParticleAssets>();
-}
-
 fn update_loading(
     mut game_state: ResMut<NextState<GameState>>,
     asset_server: Res<AssetServer>,
@@ -122,10 +115,20 @@ fn update_loading(
     game_state.set(GameState::Playing);
 }
 
+fn setup(mut commands: Commands) {
+    commands.init_resource::<TankColors>();
+    commands.init_resource::<TankAssets>();
+    commands.init_resource::<BulletAssets>();
+    commands.init_resource::<TankExplosionAssets>();
+    commands.init_resource::<SmokeVfxParticleAssets>();
+    commands.init_resource::<Gamepads>();
+}
+
 fn cleanup(mut commands: Commands) {
     commands.remove_resource::<TankColors>();
     commands.remove_resource::<TankAssets>();
     commands.remove_resource::<BulletAssets>();
     commands.remove_resource::<TankExplosionAssets>();
     commands.remove_resource::<SmokeVfxParticleAssets>();
+    commands.remove_resource::<Gamepads>();
 }

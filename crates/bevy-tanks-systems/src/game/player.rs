@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_enhanced_input::prelude::*;
 use bevy_tanks_data::*;
 use rand_distr::Normal;
 
@@ -30,6 +31,7 @@ pub fn setup<'a>(
                 Transform::from_translation(position).looking_at(Vec3::ZERO, Vec3::Y),
                 SceneRoot(tank_assets.scene.clone()),
                 player_inputs,
+                Actions::<PlayerInputs>::default(),
             ))
             .with_children(|children| {
                 children.spawn((
@@ -59,6 +61,7 @@ pub fn setup<'a>(
             left: KeyCode::KeyA,
             right: KeyCode::KeyD,
             fire: KeyCode::Space,
+            index: 0,
         },
     );
     spawn(
@@ -72,30 +75,79 @@ pub fn setup<'a>(
             left: KeyCode::ArrowLeft,
             right: KeyCode::ArrowRight,
             fire: KeyCode::Enter,
+            index: 1,
         },
     );
 }
 
-pub fn update(keys: Res<ButtonInput<KeyCode>>, mut q: Query<(&PlayerInputs, &mut TankController)>) {
-    for (inputs, mut controller) in q.iter_mut() {
-        let mut movement = Vec2::ZERO;
+// pub fn update(keys: Res<ButtonInput<KeyCode>>, mut q: Query<(&PlayerInputs, &mut TankController)>) {
+//     for (inputs, mut controller) in q.iter_mut() {
+//         let mut movement = Vec2::ZERO;
 
-        if keys.pressed(inputs.forward) {
-            movement.y += 1.0;
-        }
-        if keys.pressed(inputs.backward) {
-            movement.y -= 1.0;
-        }
-        if keys.pressed(inputs.left) {
-            movement.x -= 1.0;
-        }
-        if keys.pressed(inputs.right) {
-            movement.x += 1.0;
-        }
+//         if keys.pressed(inputs.forward) {
+//             movement.y += 1.0;
+//         }
+//         if keys.pressed(inputs.backward) {
+//             movement.y -= 1.0;
+//         }
+//         if keys.pressed(inputs.left) {
+//             movement.x -= 1.0;
+//         }
+//         if keys.pressed(inputs.right) {
+//             movement.x += 1.0;
+//         }
 
-        controller.movement = Dir2::new(movement).ok();
-        controller.fire = keys.just_pressed(inputs.fire);
+//         controller.movement = Dir2::new(movement).ok();
+//         controller.fire = keys.just_pressed(inputs.fire);
+//     }
+// }
+
+pub fn observe_binding(
+    trigger: Trigger<Binding<PlayerInputs>>,
+    gamepads: Res<Gamepads>,
+    mut q: Query<(&PlayerInputs, &mut Actions<PlayerInputs>)>,
+) {
+    let Ok((ref inputs, mut actions)) = q.get_mut(trigger.entity()) else {
+        log::warn!("No PlayerInputs found for entity {:?}", trigger.entity());
+        return;
+    };
+
+    let Gamepads(gamepads) = &*gamepads;
+    if let Some(&entity) = gamepads.get(inputs.index) {
+        actions.set_gamepad(entity);
     }
+
+    actions
+        .bind::<inputs::Move>()
+        .to((
+            Cardinal {
+                north: inputs.forward,
+                east: inputs.right,
+                south: inputs.backward,
+                west: inputs.left,
+            },
+            Axial::left_stick(),
+        ))
+        .with_modifiers((DeadZone::default(), SmoothNudge::default()));
+    actions
+        .bind::<inputs::Fire>()
+        .to((inputs.fire, GamepadButton::South));
+}
+
+pub fn observe_movement(trigger: Trigger<Fired<inputs::Move>>, mut q: Query<&mut TankController>) {
+    let Ok(mut controller) = q.get_mut(trigger.entity()) else {
+        return;
+    };
+
+    controller.movement = Dir2::new(trigger.value).ok();
+}
+
+pub fn observe_fire(trigger: Trigger<Fired<inputs::Fire>>, mut q: Query<&mut TankController>) {
+    let Ok(mut controller) = q.get_mut(trigger.entity()) else {
+        return;
+    };
+
+    controller.fire = trigger.value;
 }
 
 pub fn cleanup_game_playing(mut q: Query<&mut TankController, With<PlayerInputs>>) {

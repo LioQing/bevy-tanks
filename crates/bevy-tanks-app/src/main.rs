@@ -14,8 +14,8 @@ fn main() -> AppExit {
             DefaultPlugins
                 .set(LogPlugin {
                     level: match cfg!(debug_assertions) {
-                        true => Level::DEBUG,
-                        false => Level::INFO,
+                        true => Level::INFO,
+                        false => Level::WARN,
                     },
                     ..default()
                 })

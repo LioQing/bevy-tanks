@@ -49,7 +49,7 @@ impl std::fmt::Display for TankLabel {
     TankAlive
 )]
 pub struct TankController {
-    pub movement: Option<Dir2>,
+    pub movement: Vec2,
     pub fire: bool,
     pub fire_timer: Option<Timer>,
     pub label: TankLabel,
@@ -58,8 +58,8 @@ pub struct TankController {
 impl TankController {
     pub const fn tank_speed() -> TankSpeed {
         TankSpeed {
-            linear: 10.0,
-            angular: 2.0 * std::f32::consts::PI,
+            linear: 5.0,
+            angular: 1.0 * std::f32::consts::PI,
             fire_cooldown: Duration::from_millis(500),
         }
     }

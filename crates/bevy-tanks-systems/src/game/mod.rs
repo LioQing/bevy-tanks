@@ -17,9 +17,11 @@ pub fn plugin(app: &mut App) {
     app.add_input_context::<PlayerInputs>()
         .add_sub_state::<GameState>()
         .enable_state_scoped_entities::<GameState>()
+        .add_state_scoped_event::<TankExplosionEvent>(AppState::Game)
         .add_state_scoped_event::<PausedUiButtonEvent>(GameState::Paused)
         .add_state_scoped_event::<GameOverUiButtonEvent>(GameState::Over)
         .add_observer(tank::observe_scene_instance_ready)
+        .add_observer(tank::observe_tank_explosion)
         .add_observer(ui::observe_paused_button)
         .add_observer(ui::observe_game_over_button)
         .add_observer(player::observe_binding)
@@ -50,9 +52,11 @@ pub fn plugin(app: &mut App) {
                     smoke_vfx::update,
                     smoke_vfx::update_particle,
                     // Playing
-                    ui::update_pause_when_playing.run_if(in_state(GameState::Playing)),
+                    (player::update_out_of_bound, ui::update_pause_when_playing)
+                        .run_if(in_state(GameState::Playing)),
                     // Paused
                     (
+                        player::update_out_of_bound,
                         button::update_interaction::<PausedUiButtonEvent>,
                         ui::update_paused,
                     )

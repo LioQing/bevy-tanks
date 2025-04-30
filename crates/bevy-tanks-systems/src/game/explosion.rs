@@ -4,14 +4,14 @@ use bevy_tanks_data::*;
 pub fn update(
     mut commands: Commands,
     time: Res<Time>,
-    mut explosion_q: Query<(
+    mut q: Query<(
         Entity,
         &mut Explosion,
         &mut Transform,
         Option<(&mut PointLight, &ExplosionLight)>,
     )>,
 ) {
-    for (entity, mut explosion, mut transform, lights) in explosion_q.iter_mut() {
+    for (entity, mut explosion, mut transform, lights) in q.iter_mut() {
         explosion.timer.tick(time.delta());
 
         let x = explosion.timer.fraction();

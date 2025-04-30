@@ -80,28 +80,6 @@ pub fn setup<'a>(
     );
 }
 
-// pub fn update(keys: Res<ButtonInput<KeyCode>>, mut q: Query<(&PlayerInputs, &mut TankController)>) {
-//     for (inputs, mut controller) in q.iter_mut() {
-//         let mut movement = Vec2::ZERO;
-
-//         if keys.pressed(inputs.forward) {
-//             movement.y += 1.0;
-//         }
-//         if keys.pressed(inputs.backward) {
-//             movement.y -= 1.0;
-//         }
-//         if keys.pressed(inputs.left) {
-//             movement.x -= 1.0;
-//         }
-//         if keys.pressed(inputs.right) {
-//             movement.x += 1.0;
-//         }
-
-//         controller.movement = Dir2::new(movement).ok();
-//         controller.fire = keys.just_pressed(inputs.fire);
-//     }
-// }
-
 pub fn observe_binding(
     trigger: Trigger<Binding<PlayerInputs>>,
     gamepads: Res<Gamepads>,
@@ -134,15 +112,31 @@ pub fn observe_binding(
         .to((inputs.fire, GamepadButton::South));
 }
 
-pub fn observe_movement(trigger: Trigger<Fired<inputs::Move>>, mut q: Query<&mut TankController>) {
+pub fn observe_movement(
+    trigger: Trigger<Fired<inputs::Move>>,
+    mut q: Query<&mut TankController>,
+    state: Res<State<GameState>>,
+) {
+    if *state != GameState::Playing {
+        return;
+    }
+
     let Ok(mut controller) = q.get_mut(trigger.entity()) else {
         return;
     };
 
-    controller.movement = Dir2::new(trigger.value).ok();
+    controller.movement = trigger.value;
 }
 
-pub fn observe_fire(trigger: Trigger<Fired<inputs::Fire>>, mut q: Query<&mut TankController>) {
+pub fn observe_fire(
+    trigger: Trigger<Fired<inputs::Fire>>,
+    mut q: Query<&mut TankController>,
+    state: Res<State<GameState>>,
+) {
+    if *state != GameState::Playing {
+        return;
+    }
+
     let Ok(mut controller) = q.get_mut(trigger.entity()) else {
         return;
     };
@@ -150,9 +144,20 @@ pub fn observe_fire(trigger: Trigger<Fired<inputs::Fire>>, mut q: Query<&mut Tan
     controller.fire = trigger.value;
 }
 
+pub fn update_out_of_bound(
+    mut commands: Commands,
+    q: Query<(Entity, &Transform), With<TankController>>,
+) {
+    for (entity, transform) in q.iter() {
+        if transform.translation.y < -5.0 {
+            commands.entity(entity).trigger(TankExplosionEvent);
+        }
+    }
+}
+
 pub fn cleanup_game_playing(mut q: Query<&mut TankController, With<PlayerInputs>>) {
     for mut controller in q.iter_mut() {
-        controller.movement = None;
+        controller.movement = Vec2::ZERO;
         controller.fire = false;
     }
 }

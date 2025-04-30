@@ -1,4 +1,4 @@
-use bevy::{prelude::*, scene::SceneInstanceReady};
+use bevy::{pbr::NotShadowCaster, prelude::*, scene::SceneInstanceReady};
 use bevy_rapier3d::prelude::*;
 use bevy_tanks_data::*;
 use bevy_tnua::prelude::*;
@@ -56,18 +56,75 @@ pub fn observe_scene_instance_ready(
     }
 }
 
+pub fn observe_tank_explosion(
+    trigger: Trigger<TankExplosionEvent>,
+    mut commands: Commands,
+    mut game_state: ResMut<NextState<GameState>>,
+    tank_explosion_assets: Res<TankExplosionAssets>,
+    children_q: Query<&Children>,
+    mesh_q: Query<(), With<Mesh3d>>,
+    transform_q: Query<&Transform>,
+) {
+    let tank = trigger.entity();
+
+    // Make entity not cast shadows so it doesn't block the explosion light
+    for child in children_q.iter_descendants(tank) {
+        if let Ok(()) = mesh_q.get(child) {
+            commands.entity(child).insert(NotShadowCaster);
+        }
+    }
+
+    commands.spawn((
+        Name::new("Tank Explosion"),
+        StateScoped(AppState::Game),
+        Explosion {
+            radius: 2.5,
+            entity: Some(tank),
+            ..default()
+        },
+        Transform::from_translation(
+            transform_q.get(tank).expect("tank transfrom").translation + Vec3::Y,
+        )
+        .with_scale(Vec3::ONE * 1e-3),
+        ExplosionLight {
+            range: Some(25.0),
+            radius: Some(2.5),
+        },
+        PointLight {
+            color: Color::srgb(1.0, 0.5, 0.0),
+            intensity: 2e6,
+            range: 0.0,
+            radius: 0.0,
+            shadows_enabled: true,
+            ..default()
+        },
+        Mesh3d(tank_explosion_assets.mesh.clone()),
+        MeshMaterial3d(tank_explosion_assets.material.clone()),
+    ));
+
+    commands
+        .entity(tank)
+        .remove::<TankAlive>()
+        .remove::<RigidBody>(); // Avoid tanks from falling outside the explosion
+
+    game_state.set(GameState::Over);
+}
+
 pub fn update(
     mut commands: Commands,
     time: Res<Time>,
     bullet_assets: Res<BulletAssets>,
     tank_assets: Res<TankAssets>,
-    mut tank_q: Query<(
-        Entity,
-        &Transform,
-        &mut TankController,
-        &TankSpeed,
-        &mut TnuaController,
-    )>,
+    mut tank_q: Query<
+        (
+            Entity,
+            &Transform,
+            &mut TankController,
+            &TankSpeed,
+            &mut TnuaController,
+        ),
+        With<TankAlive>,
+    >,
     mut animation_player_q: Query<&mut AnimationPlayer>,
     children_q: Query<&Children>,
 ) {
@@ -80,9 +137,7 @@ pub fn update(
         } = &mut *controller;
 
         // Movement
-        let velocity_2d = movement.as_ref().map(Dir2::as_vec2).unwrap_or_default()
-            * speed.linear
-            * Vec2::new(1.0, -1.0);
+        let velocity_2d = movement.clamp_length_max(1.0) * speed.linear * Vec2::new(1.0, -1.0);
         let velocity = Vec3::new(velocity_2d.x, 0.0, velocity_2d.y);
 
         tnua_controller.basis(TnuaBuiltinWalk {
@@ -121,7 +176,7 @@ pub fn update(
                 MeshMaterial3d(bullet_assets.material.clone()),
                 Bullet::velocity(bullet_transform.forward()),
                 SmokeVfx {
-                    timer: Timer::from_seconds(0.02, TimerMode::Repeating),
+                    timer: Timer::from_seconds(0.04, TimerMode::Repeating),
                     radius: Normal::new(0.75, 0.2).expect("normal distribution"),
                     velocity: bullet_transform
                         .forward()
@@ -149,7 +204,7 @@ pub fn update(
         }
 
         // Reset movement and fire
-        *movement = None;
+        *movement = Vec2::ZERO;
         *fire = false;
     }
 }

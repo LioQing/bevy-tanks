@@ -47,7 +47,7 @@ impl Bullet {
 
     pub fn velocity(direction: Dir3) -> Velocity {
         Velocity {
-            linvel: direction * 20.0,
+            linvel: direction * 10.0,
             ..default()
         }
     }

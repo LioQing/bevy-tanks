@@ -38,3 +38,18 @@ pub fn update_tank_collision_events(
         commands.entity(tank).trigger(TankExplosionEvent);
     }
 }
+
+pub fn update_bullet_velocity(
+    bullet_q: Query<(&Children, &Velocity), With<Bullet>>,
+    mut bullet_velocity_q: Query<&mut Transform, With<BulletVelocity>>,
+) {
+    for (children, velocity) in bullet_q.iter() {
+        for child in children.iter() {
+            if let Ok(mut transform) = bullet_velocity_q.get_mut(*child) {
+                let len = velocity.linvel.length();
+                transform.scale.z = len;
+                transform.translation.z = -len;
+            }
+        }
+    }
+}

@@ -5,6 +5,7 @@ use bevy_tnua::prelude::*;
 
 use crate::common::{self, ui::button};
 
+mod ai;
 mod bullet;
 mod explosion;
 mod others;
@@ -34,6 +35,8 @@ pub fn plugin(app: &mut App) {
                 others::setup_camera,
                 others::setup_floor,
                 others::setup_light,
+                #[cfg(debug_assertions)]
+                others::setup_nav_mesh,
                 smoke_vfx::setup,
             ),
         )
@@ -52,7 +55,18 @@ pub fn plugin(app: &mut App) {
                     smoke_vfx::update,
                     smoke_vfx::update_particle,
                     // Playing
-                    (player::update_out_of_bound, ui::update_pause_when_playing)
+                    (
+                        player::update_out_of_bound,
+                        bullet::update_bullet_velocity,
+                        ui::update_pause_when_playing,
+                        (
+                            ai::update_controls,
+                            ai::update_bullet_velocity_tank_collision_events
+                                .before(ai::update_path),
+                            ai::update_path,
+                        )
+                            .run_if(|game_mode: Res<GameMode>| !game_mode.multiplayer),
+                    )
                         .run_if(in_state(GameState::Playing)),
                     // Paused
                     (
@@ -75,14 +89,14 @@ pub fn plugin(app: &mut App) {
                 exited: GameState::Loading,
                 entered: GameState::Playing,
             },
-            player::setup,
+            tank::setup,
         )
         .add_systems(
             OnTransition {
                 exited: GameState::Over,
                 entered: GameState::Playing,
             },
-            player::setup,
+            tank::setup,
         )
         .add_systems(OnExit(GameState::Playing), player::cleanup_game_playing)
         .add_systems(OnEnter(GameState::Paused), ui::setup_paused)
@@ -99,7 +113,7 @@ fn update_loading(
     match asset_server.recursive_dependency_load_state(&tank_assets.scene) {
         RecursiveDependencyLoadState::Loading | RecursiveDependencyLoadState::NotLoaded => return,
         RecursiveDependencyLoadState::Failed(e) => {
-            log::error!("Failed to load tank scene: {e}");
+            error!("Failed to load tank scene: {e}");
             return;
         }
         _ => {}
@@ -108,13 +122,13 @@ fn update_loading(
     match asset_server.recursive_dependency_load_state(&tank_assets.fire_animation) {
         RecursiveDependencyLoadState::Loading | RecursiveDependencyLoadState::NotLoaded => return,
         RecursiveDependencyLoadState::Failed(e) => {
-            log::error!("Failed to load tank fire animation: {e}");
+            error!("Failed to load tank fire animation: {e}");
             return;
         }
         _ => {}
     }
 
-    log::debug!("Tank scene and fire animation loaded");
+    debug!("Tank scene and fire animation loaded");
 
     game_state.set(GameState::Playing);
 }
@@ -126,6 +140,7 @@ fn setup(mut commands: Commands) {
     commands.init_resource::<TankExplosionAssets>();
     commands.init_resource::<SmokeVfxParticleAssets>();
     commands.init_resource::<Gamepads>();
+    commands.init_resource::<AiNavQueue>();
 }
 
 fn cleanup(mut commands: Commands) {
@@ -135,4 +150,5 @@ fn cleanup(mut commands: Commands) {
     commands.remove_resource::<TankExplosionAssets>();
     commands.remove_resource::<SmokeVfxParticleAssets>();
     commands.remove_resource::<Gamepads>();
+    commands.remove_resource::<AiNavQueue>();
 }

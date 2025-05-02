@@ -1,4 +1,12 @@
+use std::collections::VecDeque;
+
 use bevy::prelude::*;
+
+#[derive(Debug, Default, Resource)]
+pub struct Gamepads(pub Vec<Entity>);
+
+#[derive(Debug, Default, Resource)]
+pub struct AiNavQueue(pub VecDeque<(Entity, Vec3)>);
 
 #[derive(Debug, Resource)]
 pub struct Typography {
@@ -27,4 +35,9 @@ impl FromWorld for Typography {
             },
         }
     }
+}
+
+#[derive(Debug, Default, Resource)]
+pub struct GameMode {
+    pub multiplayer: bool,
 }

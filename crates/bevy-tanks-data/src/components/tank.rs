@@ -4,13 +4,14 @@ use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 use bevy_tnua::prelude::*;
 use bevy_tnua_rapier3d::TnuaRapier3dSensorShape;
+use oxidized_navigation::NavMeshAffector;
 
 use super::NamedGroup;
 
 #[derive(Debug, Default, Clone, Copy, Component)]
 pub struct TankAlive;
 
-#[derive(Debug, Default, Clone, Copy)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub enum TankLabel {
     #[default]
     Red,
@@ -44,9 +45,11 @@ impl std::fmt::Display for TankLabel {
     Collider(TankController::collider),
     CollisionGroups(TankController::collision_groups),
     SolverGroups(TankController::solver_groups),
+    ActiveCollisionTypes,
     TnuaController,
     TnuaRapier3dSensorShape(TankController::tnua_rapier3d_sensor_shape),
-    TankAlive
+    TankAlive,
+    NavMeshAffector
 )]
 pub struct TankController {
     pub movement: Vec2,
@@ -58,8 +61,8 @@ pub struct TankController {
 impl TankController {
     pub const fn tank_speed() -> TankSpeed {
         TankSpeed {
-            linear: 5.0,
-            angular: 1.0 * std::f32::consts::PI,
+            linear: 8.0,
+            angular: 1.5 * std::f32::consts::PI,
             fire_cooldown: Duration::from_millis(500),
         }
     }
@@ -88,7 +91,10 @@ impl TankController {
     }
 
     pub fn solver_groups() -> SolverGroups {
-        SolverGroups::new(NamedGroup::TANK, Group::all() & !NamedGroup::BULLET)
+        SolverGroups::new(
+            NamedGroup::TANK,
+            NamedGroup::physical() & !NamedGroup::BULLET,
+        )
     }
 
     pub fn tnua_rapier3d_sensor_shape() -> TnuaRapier3dSensorShape {

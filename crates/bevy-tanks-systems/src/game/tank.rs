@@ -4,6 +4,87 @@ use bevy_tanks_data::*;
 use bevy_tnua::prelude::*;
 use rand_distr::Normal;
 
+pub fn setup<'a>(
+    mut commands: Commands,
+    mut tank_colors: ResMut<TankColors>,
+    game_mode: Res<GameMode>,
+    tank_assets: Res<TankAssets>,
+) {
+    let TankColors(tank_colors) = &mut *tank_colors;
+
+    let mut spawn = |name, label, position, color, player_inputs| {
+        let smoke_vfx = SmokeVfx {
+            timer: Timer::from_seconds(0.02, TimerMode::Repeating),
+            radius: Normal::new(0.5, 0.2).expect("normal distribution"),
+            velocity: [
+                Normal::new(0.0, 1.0).expect("normal distribution"),
+                Normal::new(1.0, 1.0).expect("normal distribution"),
+                Normal::new(0.0, 1.0).expect("normal distribution"),
+            ],
+            lifetime: Normal::new(0.5, 0.2).expect("normal distribution"),
+            time_scale: 0.0,
+        };
+
+        let mut entity_commands = commands.spawn((
+            Name::new(name),
+            StateScoped(AppState::Game),
+            TankController { label, ..default() },
+            Transform::from_translation(position).looking_at(Vec3::ZERO, Vec3::Y),
+            SceneRoot(tank_assets.scene.clone()),
+        ));
+
+        entity_commands.with_children(|children| {
+            children.spawn((
+                Name::new("Left Smoke VFX"),
+                Transform::from_xyz(-1.0, 0.0, 0.8),
+                smoke_vfx.clone(),
+            ));
+            children.spawn((
+                Name::new("Right Smoke VFX"),
+                Transform::from_xyz(1.0, 0.0, 0.8),
+                smoke_vfx,
+            ));
+        });
+
+        if let Some(player_inputs) = player_inputs {
+            entity_commands.insert(player_inputs);
+        } else {
+            entity_commands.insert(AiInputs::default());
+        }
+
+        tank_colors.insert(entity_commands.id(), color);
+    };
+
+    spawn(
+        "Player 1",
+        TankLabel::Blue,
+        Vec3::new(-15.0, 1.0, -15.0),
+        Color::srgb(0.0, 0.5, 1.0),
+        Some(PlayerInputs {
+            forward: KeyCode::KeyW,
+            backward: KeyCode::KeyS,
+            left: KeyCode::KeyA,
+            right: KeyCode::KeyD,
+            fire: KeyCode::Space,
+            index: 0,
+        }),
+    );
+    spawn(
+        game_mode.multiplayer.then(|| "Player 2").unwrap_or("AI"),
+        TankLabel::Red,
+        Vec3::new(15.0, 1.0, 15.0),
+        Color::srgb(1.0, 0.0, 0.0),
+        game_mode.multiplayer.then_some(PlayerInputs {
+            forward: KeyCode::ArrowUp,
+            backward: KeyCode::ArrowDown,
+            left: KeyCode::ArrowLeft,
+            right: KeyCode::ArrowRight,
+            fire: KeyCode::Enter,
+            index: 1,
+        }),
+    );
+}
+
 pub fn observe_scene_instance_ready(
     trigger: Trigger<SceneInstanceReady>,
     mut commands: Commands,
@@ -122,13 +203,16 @@ pub fn update(
             &mut TankController,
             &TankSpeed,
             &mut TnuaController,
+            Option<&AiInputs>,
         ),
         With<TankAlive>,
     >,
     mut animation_player_q: Query<&mut AnimationPlayer>,
     children_q: Query<&Children>,
 ) {
-    for (entity, transform, mut controller, speed, mut tnua_controller) in tank_q.iter_mut() {
+    for (entity, transform, mut controller, speed, mut tnua_controller, ai_inputs) in
+        tank_q.iter_mut()
+    {
         let TankController {
             movement,
             fire,
@@ -167,9 +251,9 @@ pub fn update(
                     + transform.up() * UP_OFFSET,
             );
 
-            commands.spawn((
+            let mut entity_commands = commands.spawn((
                 Name::new("Bullet"),
-                StateScoped(AppState::Game),
+                StateScoped(GameState::Playing),
                 Bullet,
                 bullet_transform,
                 Mesh3d(bullet_assets.mesh.clone()),
@@ -186,6 +270,15 @@ pub fn update(
                     ..default()
                 },
             ));
+
+            if ai_inputs.is_none() {
+                // Spawn bullet velocity component for player tanks
+                // We don't spawn it for AI because they will try to dodge it
+                // because the bullet velocity collider is a bit bigger than the bullet's own collider
+                entity_commands.with_children(|children| {
+                    children.spawn((Name::new("Bullet Velocity"), BulletVelocity));
+                });
+            }
 
             for descendant in children_q.iter_descendants(entity) {
                 if let Ok(mut animation_player) = animation_player_q.get_mut(descendant) {

@@ -1,6 +1,10 @@
 use bevy::{core_pipeline::bloom::Bloom, prelude::*};
 use bevy_rapier3d::prelude::*;
 use bevy_tanks_data::*;
+use oxidized_navigation::NavMeshAffector;
+
+#[cfg(debug_assertions)]
+use oxidized_navigation::debug_draw::DrawNavMesh;
 
 pub fn setup_camera(mut commands: Commands) {
     commands.spawn((
@@ -32,6 +36,7 @@ pub fn setup_floor(
         })),
         Collider::cuboid(20.0, 0.0, 20.0),
         RigidBody::Fixed,
+        NavMeshAffector,
     ));
 }
 
@@ -56,4 +61,10 @@ pub fn setup_light(mut commands: Commands) {
             ..default()
         },
     ));
+}
+
+#[cfg(debug_assertions)]
+pub fn setup_nav_mesh(mut show_navmesh: ResMut<DrawNavMesh>) {
+    let DrawNavMesh(show_navmesh) = &mut *show_navmesh;
+    *show_navmesh = true;
 }

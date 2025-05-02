@@ -11,25 +11,39 @@ pub mod button {
     pub const BACKGROUND_HOVER_COLOR: Color = Color::srgb(0.4, 0.4, 0.4);
     pub const BACKGROUND_PRESSED_COLOR: Color = Color::srgb(0.2, 0.2, 0.2);
 
+    pub fn default_node() -> Node {
+        Node {
+            flex_direction: FlexDirection::Row,
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Center,
+            width: Val::Px(200.0),
+            height: Val::Px(50.0),
+            border: UiRect::all(Val::Px(2.0)),
+            ..default()
+        }
+    }
+
     pub fn spawn<'a>(
         commands: &'a mut ChildBuilder,
         typography: &Typography,
         text: &str,
         event: impl Event,
     ) -> EntityCommands<'a> {
+        spawn_with_node(commands, typography, text, event, default_node())
+    }
+
+    pub fn spawn_with_node<'a>(
+        commands: &'a mut ChildBuilder,
+        typography: &Typography,
+        text: &str,
+        event: impl Event,
+        node: Node,
+    ) -> EntityCommands<'a> {
         let mut entity_commands = commands.spawn((
             Name::new(format!("{text} Button")),
             Button,
             EventEmitter(event),
-            Node {
-                flex_direction: FlexDirection::Row,
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
-                width: Val::Px(200.0),
-                height: Val::Px(50.0),
-                border: UiRect::all(Val::Px(2.0)),
-                ..default()
-            },
+            node,
             BorderColor(BORDER_COLOR),
             BorderRadius::MAX,
             BackgroundColor(BACKGROUND_COLOR),

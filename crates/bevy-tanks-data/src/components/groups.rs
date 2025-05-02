@@ -13,4 +13,9 @@ impl NamedGroup {
     group!(TANK, 1);
     group!(BULLET, 2);
     group!(TERRAIN, 3);
+    group!(BULLET_VELOCITY, 4);
+
+    pub fn physical() -> Group {
+        NamedGroup::TANK | NamedGroup::BULLET | NamedGroup::TERRAIN
+    }
 }

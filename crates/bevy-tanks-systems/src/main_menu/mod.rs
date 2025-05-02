@@ -36,23 +36,63 @@ fn setup(mut commands: Commands, typography: Res<Typography>) {
                 height: Val::Px(64.0),
                 ..default()
             });
-            button::spawn(children, &typography, "Start", MainMenuUiButtonEvent::Play);
+            button::spawn_with_node(
+                children,
+                &typography,
+                "Play Single Player",
+                MainMenuUiButtonEvent::PlaySinglePlayer,
+                Node {
+                    width: Val::Px(250.0),
+                    ..button::default_node()
+                },
+            );
             children.spawn(Node {
                 height: Val::Px(12.0),
                 ..default()
             });
-            button::spawn(children, &typography, "Quit", MainMenuUiButtonEvent::Quit);
+            button::spawn_with_node(
+                children,
+                &typography,
+                "Play Multiplayer",
+                MainMenuUiButtonEvent::PlayMultiplayer,
+                Node {
+                    width: Val::Px(250.0),
+                    ..button::default_node()
+                },
+            );
+            if !cfg!(target_arch = "wasm32") {
+                children.spawn(Node {
+                    height: Val::Px(12.0),
+                    ..default()
+                });
+                button::spawn_with_node(
+                    children,
+                    &typography,
+                    "Quit",
+                    MainMenuUiButtonEvent::Quit,
+                    Node {
+                        width: Val::Px(250.0),
+                        ..button::default_node()
+                    },
+                );
+            }
         });
 }
 
 fn observe_button(
     trigger: Trigger<MainMenuUiButtonEvent>,
+    mut commands: Commands,
     mut app_state: ResMut<NextState<AppState>>,
     mut exit_evw: EventWriter<AppExit>,
 ) {
     match trigger.event() {
-        MainMenuUiButtonEvent::Play => {
+        MainMenuUiButtonEvent::PlaySinglePlayer => {
             app_state.set(AppState::Game);
+            commands.insert_resource(GameMode { multiplayer: false });
+        }
+        MainMenuUiButtonEvent::PlayMultiplayer => {
+            app_state.set(AppState::Game);
+            commands.insert_resource(GameMode { multiplayer: true });
         }
         MainMenuUiButtonEvent::Quit => {
             exit_evw.send(AppExit::Success);

@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy_enhanced_input::prelude::*;
 
 #[derive(Debug, Clone, Component, InputContext)]
+#[require(Actions::<PlayerInputs>)]
 pub struct PlayerInputs {
     pub forward: KeyCode,
     pub backward: KeyCode,

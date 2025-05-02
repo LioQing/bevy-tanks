@@ -2,7 +2,8 @@ use bevy::prelude::*;
 
 #[derive(Debug, Clone, Event)]
 pub enum MainMenuUiButtonEvent {
-    Play,
+    PlaySinglePlayer,
+    PlayMultiplayer,
     Quit,
 }
 

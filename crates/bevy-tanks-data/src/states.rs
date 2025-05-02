@@ -1,13 +1,13 @@
 use bevy::prelude::*;
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash, Default, States)]
+#[derive(Debug, Default, Clone, Eq, PartialEq, Hash, States)]
 pub enum AppState {
     #[default]
     MainMenu,
     Game,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash, Default, SubStates)]
+#[derive(Debug, Default, Clone, Eq, PartialEq, Hash, SubStates)]
 #[source(AppState = AppState::Game)]
 pub enum GameState {
     #[default]

@@ -14,6 +14,6 @@ bevy_enhanced_input.workspace = true
 bevy_rand.workspace = true
 bevy_rapier3d.workspace = true
 bevy-tnua.workspace = true
+oxidized_navigation.workspace = true
 rand.workspace = true
 rand_distr.workspace = true
-log.workspace = true

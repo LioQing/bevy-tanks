@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
+use oxidized_navigation::NavMeshAffector;
 
 use super::{NamedGroup, SmokeVfx};
 
@@ -38,7 +39,7 @@ impl Bullet {
     }
 
     pub fn collision_groups() -> CollisionGroups {
-        CollisionGroups::new(NamedGroup::BULLET, Group::all())
+        CollisionGroups::new(NamedGroup::BULLET, NamedGroup::physical())
     }
 
     pub fn solver_groups() -> SolverGroups {
@@ -47,9 +48,38 @@ impl Bullet {
 
     pub fn velocity(direction: Dir3) -> Velocity {
         Velocity {
-            linvel: direction * 10.0,
+            linvel: direction * 12.0,
             ..default()
         }
+    }
+
+    pub fn active_events() -> ActiveEvents {
+        ActiveEvents::COLLISION_EVENTS
+    }
+}
+
+#[derive(Debug, Clone, Copy, Component)]
+#[require(
+    Transform,
+    Collider(BulletVelocity::collider),
+    CollisionGroups(BulletVelocity::collision_groups),
+    SolverGroups(BulletVelocity::solver_groups),
+    ActiveEvents(BulletVelocity::active_events),
+    NavMeshAffector
+)]
+pub struct BulletVelocity;
+
+impl BulletVelocity {
+    pub fn collider() -> Collider {
+        Collider::cuboid(0.4, 0.4, 1.0)
+    }
+
+    pub fn collision_groups() -> CollisionGroups {
+        CollisionGroups::new(NamedGroup::BULLET_VELOCITY, NamedGroup::TANK)
+    }
+
+    pub fn solver_groups() -> SolverGroups {
+        SolverGroups::new(NamedGroup::BULLET_VELOCITY, Group::empty())
     }
 
     pub fn active_events() -> ActiveEvents {

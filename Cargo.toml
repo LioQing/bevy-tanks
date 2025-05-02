@@ -21,11 +21,16 @@ bevy_rapier3d = { version = "0.29", features = [
 ] }
 bevy-tnua = "0.23"
 bevy-tnua-rapier3d = "0.11"
+# Wait for oxidized_navigation to update to parry3d 0.18,
+# but it is blocked by avian3d using parry3d 0.17
+oxidized_navigation = { git = "https://github.com/LioQing/oxidized_navigation", features = [
+    "rapier",
+    "debug_draw",
+] }
 paste = "1.0"
 rand = "0.8"
 rand_core = "0.6"
 rand_distr = "0.4"
-log = "0.4"
 
 [profile.dev]
 debug = 0

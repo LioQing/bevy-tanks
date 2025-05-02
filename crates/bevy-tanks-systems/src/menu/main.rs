@@ -4,19 +4,18 @@ use bevy_tanks_data::*;
 use crate::common::ui::button;
 
 pub fn plugin(app: &mut App) {
-    app.add_state_scoped_event::<MainMenuUiButtonEvent>(AppState::MainMenu)
+    app.add_state_scoped_event::<MainMenuUiButtonEvent>(MenuState::Main)
+        .enable_state_scoped_entities::<MenuState>()
         .add_observer(observe_button)
-        .add_systems(OnEnter(AppState::MainMenu), setup)
+        .add_systems(OnEnter(MenuState::Main), setup)
         .add_systems(Update, button::update_interaction::<MainMenuUiButtonEvent>);
 }
 
 fn setup(mut commands: Commands, typography: Res<Typography>) {
-    commands.spawn((Camera2d::default(), StateScoped(AppState::MainMenu)));
-
     commands
         .spawn((
             Name::new("Main Menu UI"),
-            StateScoped(AppState::MainMenu),
+            StateScoped(MenuState::Main),
             Node {
                 width: Val::Percent(100.0),
                 height: Val::Percent(100.0),
@@ -60,6 +59,20 @@ fn setup(mut commands: Commands, typography: Res<Typography>) {
                     ..button::default_node()
                 },
             );
+            children.spawn(Node {
+                height: Val::Px(12.0),
+                ..default()
+            });
+            button::spawn_with_node(
+                children,
+                &typography,
+                "How To Play",
+                MainMenuUiButtonEvent::HowToPlay,
+                Node {
+                    width: Val::Px(250.0),
+                    ..button::default_node()
+                },
+            );
             if !cfg!(target_arch = "wasm32") {
                 children.spawn(Node {
                     height: Val::Px(12.0),
@@ -83,6 +96,7 @@ fn observe_button(
     trigger: Trigger<MainMenuUiButtonEvent>,
     mut commands: Commands,
     mut app_state: ResMut<NextState<AppState>>,
+    mut menu_state: ResMut<NextState<MenuState>>,
     mut exit_evw: EventWriter<AppExit>,
 ) {
     match trigger.event() {
@@ -93,6 +107,9 @@ fn observe_button(
         MainMenuUiButtonEvent::PlayMultiplayer => {
             app_state.set(AppState::Game);
             commands.insert_resource(GameMode { multiplayer: true });
+        }
+        MainMenuUiButtonEvent::HowToPlay => {
+            menu_state.set(MenuState::HowToPlay);
         }
         MainMenuUiButtonEvent::Quit => {
             exit_evw.send(AppExit::Success);

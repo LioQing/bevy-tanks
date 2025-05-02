@@ -84,7 +84,7 @@ pub fn observe_paused_button(
             game_state.set(GameState::Playing);
         }
         PausedUiButtonEvent::MainMenu => {
-            app_state.set(AppState::MainMenu);
+            app_state.set(AppState::Menu);
         }
     }
 }
@@ -170,7 +170,7 @@ pub fn observe_game_over_button(
             game_state.set(GameState::Playing);
         }
         GameOverUiButtonEvent::MainMenu => {
-            app_state.set(AppState::MainMenu);
+            app_state.set(AppState::Menu);
         }
     }
 }

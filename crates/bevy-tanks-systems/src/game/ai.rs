@@ -94,7 +94,13 @@ pub fn update_controls(
                         controller.movement = target_disp.xz() * Vec2::new(1.0, -1.0);
                     }
 
-                    if target_disp_dot_forward > 0.9 && controller.fire_timer.is_none() {
+                    let player_disp =
+                        (player_transform.translation - transform.translation).normalize_or_zero();
+                    let player_disp_dot_forward = player_disp.dot(transform.forward().as_vec3());
+
+                    if (target_disp_dot_forward > 0.9 || player_disp_dot_forward > 0.9)
+                        && controller.fire_timer.is_none()
+                    {
                         controller.fire = true;
                         *fire_count -= 1;
                     }
@@ -118,7 +124,11 @@ pub fn update_controls(
                     let target_disp = (target - transform.translation).normalize_or_zero();
                     let target_disp_dot_forward = target_disp.dot(transform.forward().as_vec3());
 
-                    if target_disp_dot_forward > 0.9 {
+                    let player_disp =
+                        (player_transform.translation - transform.translation).normalize_or_zero();
+                    let player_disp_dot_forward = player_disp.dot(transform.forward().as_vec3());
+
+                    if target_disp_dot_forward > 0.9 || player_disp_dot_forward > 0.9 {
                         controller.fire = true;
                     }
                 }
